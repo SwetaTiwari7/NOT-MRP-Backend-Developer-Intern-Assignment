@@ -1,64 +1,34 @@
-import { Op, where, WhereOptions } from 'sequelize';
-import CustomerSchema from './customer.schema';
-import { Customer } from './customer.type';
-import UserSchema from '../user/user.schema';
+import { FilterQuery } from "mongoose";
+import UserSchema, { IUser } from "../user/user.schema";
 
-const getCustomer = async (limit: number, offset: number) =>
-  await CustomerSchema.findAndCountAll({
-    include: [
-      {
-        model: UserSchema,
-        as: 'customer',
-        attributes: ['id', 'name', 'email', 'contact_no'],
-      },
-      {
-        model: UserSchema,
-        as: 'distributer',
-        attributes: ['name'],
-      },
-    ],
-    limit: limit,
-    offset: offset,
-  });
+const getCustomers = async (limit: number, offset: number) => {
+  const rows = await UserSchema.find({ role: "customer" })
+    .skip(offset)
+    .limit(limit)
+    .select("-__v -password");
 
-const getCustomerById = (limit: number, offset: number, id: string) =>
-  CustomerSchema.findAndCountAll({
-    attributes: {
-      exclude: ['createdAt', 'updatedAt', 'id', 'distributerId'],
-    },
-    include: [
-      {
-        model: UserSchema,
-        as: 'customer',
-        attributes: ['name', 'email', 'contact_no'],
-      },
-    ],
-    limit: limit,
-    offset: offset,
-    where: {
-      distributerId: id,
-    },
-  });
+  const count = await UserSchema.countDocuments({ role: "customer" });
+  return { rows, count };
+};
 
-const createCustomer = (user: Customer) => CustomerSchema.create(user);
+// Get single customer by ID
+const getCustomerById = async (id: string) => {
+  return await UserSchema.findOne({ _id: id, role: "customer" }).select("-__v -password");
+};
 
-const getByAttribute = async (attribute: string) =>
-  await CustomerSchema.findAll({
-    where: {
-      [Op.or]: [{ distributerId: `${attribute}` }, { userId: attribute }],
-    },
-  });
+// Filter customers by attributes
+const filterCustomers = async (filter: Partial<IUser>) => {
+  const query: FilterQuery<IUser> = {
+    role: "customer",
+    ...(filter as FilterQuery<IUser>),
+  };
 
-const filterCustomer = async (user: WhereOptions<Customer>) => await CustomerSchema.findAll({ where: user });
+  return await UserSchema.find(query).select("-__v -password");
+};
 
-const updateCustomer = async (userDetail: Partial<Customer>, id: string) =>
-  await CustomerSchema.update(userDetail, { where: { userId: id } });
 
 export default {
-  getCustomer,
+  getCustomers,
   getCustomerById,
-  createCustomer,
-  getByAttribute,
-  filterCustomer,
-  updateCustomer,
+  filterCustomers,
 };

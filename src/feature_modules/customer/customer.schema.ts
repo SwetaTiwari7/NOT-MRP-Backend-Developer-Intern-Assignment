@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface IContact extends Document {
   name: string;
@@ -9,7 +9,7 @@ export interface IContact extends Document {
   businessId: string;
 }
 
-const contactSchema = new Schema<IContact>(
+const customerSchema: Schema<IContact> = new Schema(
   {
     name: { type: String, required: true },
     phone: { type: String, required: true },
@@ -21,4 +21,4 @@ const contactSchema = new Schema<IContact>(
   { timestamps: true }
 );
 
-export default mongoose.model<IContact>("Contact", contactSchema);
+export default mongoose.model<IContact>("Customer", customerSchema);
