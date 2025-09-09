@@ -1,5 +1,6 @@
 import { Router } from "express";
 import transactionService from "./transaction.service";
+import { Route } from "../../route/route.type";
 
 const router = Router();
 
@@ -54,4 +55,4 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-export default router;
+export default new Route('/transaction', router);
